@@ -535,16 +535,20 @@ def wheel_version(source_dir):
     Otherwise, return False if we couldn't parse / extract it.
     """
     try:
-        dist = [d for d in pkg_resources.find_on_path(None, source_dir)][0]
+        for dist in pkg_resources.find_on_path(None, source_dir):
+            try:
+                wheel_data = dist.get_metadata('WHEEL')
+            except KeyError:
+                pass
+            else:
+                wheel_data = Parser().parsestr(wheel_data)
 
-        wheel_data = dist.get_metadata('WHEEL')
-        wheel_data = Parser().parsestr(wheel_data)
-
-        version = wheel_data['Wheel-Version'].strip()
-        version = tuple(map(int, version.split('.')))
-        return version
+                version = wheel_data['Wheel-Version'].strip()
+                version = tuple(map(int, version.split('.')))
+                return version
     except:
-        return False
+        pass
+    return False
 
 
 def check_compatibility(version, name):
